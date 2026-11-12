@@ -23,8 +23,3 @@ Served over HTTP (e.g. `python -m http.server` in `viewer/`), it opens directly:
 ```
 http://localhost:8000/gcode_viewer.html?src=examples/propeller.gcode&stl=examples/propeller_substrate.stl&subrot=-45
 ```
-
-### Machine model
-
-`viewer/machine_parts/` holds the machine STLs (frame, cradle, rotary table, extruder). `machine_mesh.py` (Python, numpy) packs them into `machine_mesh.js`, which the viewer loads; rerun it after changing an STL.
-Print head: Prusa i3 MK3S extruder (Prusa Research, GPL-3.0).
