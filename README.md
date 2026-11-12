@@ -1,6 +1,6 @@
 # 5axisFDM
 
-5-axis FDM printing on a tilt-rotary table (Open5x-style, Prusa-based), by GoetheLab, FH Aachen.
+5-axis FDM printing on a tilt-rotary table (Open5x-style, Prusa-based), by [GoetheLab](https://www.goethelab.fh-aachen.de/), FH Aachen.
 This repository currently contains the G-code viewer; slicer and mechanical design will follow.
 
 ![Viewer](viewer/viewer.png)
