@@ -43,13 +43,16 @@
   #app { display: grid; grid-template-columns: 344px minmax(0, 1fr); height: 100vh; }
 
   /* ---------------------------------------------------------------- Seitenleiste */
-  aside { background: var(--bg); border-right: 1px solid #161618; overflow-y: auto; padding: 0 16px 28px;
-    scrollbar-width: thin; scrollbar-color: #3a3a3c transparent; }
+  aside { display: flex; flex-direction: column; background: var(--bg); border-right: 1px solid #161618; overflow-y: auto;
+    padding: 0 16px 20px; scrollbar-width: thin; scrollbar-color: #3a3a3c transparent; }
+  .repo { margin-top: auto; padding: 28px 0 0 14px; color: var(--text-3); font-size: 11.5px; text-decoration: none;
+    overflow-wrap: anywhere; }
+  .repo:hover { color: var(--text-2); }
 
   /* FH-Logo bündig oben links wie in RePrint, Mint läuft aus der Oberkante */
   .brand { display: grid; grid-template-columns: 52px 1fr; gap: 18px; margin: 0 0 4px -16px; min-height: 156px; }
-  .brand .fh { width: 52px; height: 156px; background: var(--logo-fh) no-repeat 0 0 / 100% auto; }
-  .brand .gl { width: 172px; height: 70px; margin-top: 22px; background: var(--logo-gl) no-repeat 0 50% / contain; }
+  .brand .fh { width: 52px; height: 156px; margin-top: 20px; background: var(--logo-fh) no-repeat 0 0 / 100% auto; }
+  .brand .gl { width: 172px; height: 70px; margin-top: 45px; margin-left: 25px; background: var(--logo-gl) no-repeat 0 50% / contain; }
 
   .group { margin-top: 24px; }
   .group > h2 { margin: 0 0 7px 14px; font-size: 12.5px; font-weight: 400; color: var(--text-2); }
@@ -294,6 +297,7 @@
       <h2>Current move</h2>
       <div class="card"><div id="infoRows"></div><div id="gcode"><div id="gcodeList"></div></div></div>
     </section>
+    <a class="repo" href="https://github.com/GoetheLabGit/5axisFDM" target="_blank" rel="noopener">https://github.com/GoetheLabGit/5axisFDM</a>
   </aside>
 
   <div id="view">
@@ -313,7 +317,7 @@
     <div class="empty">
       <svg class="i" viewBox="0 0 24 24"><path d="M12 2.8l8 4.6v9.2l-8 4.6-8-4.6V7.4z"/><path d="M4 7.4l8 4.6 8-4.6M12 12v9.2"/></svg>
       <h2>Drop G-code here</h2>
-      <p>LP robot, table or Open5x machine code. Choose the substrate STL on the left under “Substrate”.</p>
+      <p>Robot (A/B/C), table (B/C) or machine code (X/Y/Z/U/V). Choose the substrate STL on the left under “Substrate”.</p>
       <button id="emptyPick" class="btn-primary" type="button">Choose file</button>
     </div>
 
@@ -648,18 +652,18 @@ matBead.onBeforeCompile = sh => {
 };
 
 // Kette: Welt → carY (Y-Schlitten, fährt um −Y) → cradleB (Schwenk B um Y) → tableC (Drehung C) → part (Bauteil-KS)
-// Maschinenmodell aus den STLs in open5x_machine_stl/ (loadMachine): aussen3 fest auf dem Y-Schlitten, innen3 schwenkt
-// mit B, z-steg (Platte Ø 70, Oberseite z = 0) dreht mit C, Prusa-Kopf mit der Düsenspitze im Ursprung von head.
+// Maschinenmodell aus den STLs in machine_parts/ (loadMachine): frame fest auf dem Y-Schlitten, cradle schwenkt
+// mit B, rotary_table (Platte Ø 70, Oberseite z = 0) dreht mit C, Prusa-Kopf mit der Düsenspitze im Ursprung von head.
 // Selbst gezeichnet (keine STL): C-Lager, Ø 8-Stangen für X (fahren mit Z) und Y (fest), Y-Lagerklötze unter den Füßen.
 // Maße in mm, nur Darstellung; die Kinematik selbst ist exakt.
 const MACH = {
-  // C-Lager: zwei dünne Scheiben unter dem z-steg, zwischen seinem Flansch (Unterseite z −49,5, r ≤ 22,5) und dem Ring
-  // von innen3 (Oberseite z −60, r 31…41); je [r innen, r außen, z unten, z oben, Glied der Kette]
+  // C-Lager: zwei dünne Scheiben unter rotary_table, zwischen seinem Flansch (Unterseite z −49,5, r ≤ 22,5) und dem Ring
+  // von cradle (Oberseite z −60, r 31…41); je [r innen, r außen, z unten, z oben, Glied der Kette]
   bearing: [[12, 32, -54.5, -49.5, 'tableC'], [12, 36, -60, -55, 'cradleB']],
   rodR: 4,
-  // X: Lage aus den LM8UU-Sitzen im Schlitten von Extruder.stl (relativ zur Düsenspitze), Länge wie Prusa
+  // X: Lage aus den LM8UU-Sitzen im Schlitten von extruder.stl (relativ zur Düsenspitze), Länge wie Prusa
   xRods: { y: 30.5, z: [73, 118.1], len: 370 },
-  // Y: fest im Rahmen; je Stange zwei Klötze (SC8UU 34 × 30 × 22, Stange mittig) unter den Fußplatten von aussen3
+  // Y: fest im Rahmen; je Stange zwei Klötze (SC8UU 34 × 30 × 22, Stange mittig) unter den Fußplatten von frame
   // (Plattenmitte x ±60, y −65 / 100, Unterseite z −92); Stangen reichen je Seite `over` mm über den Klotzweg hinaus
   yRods: { x: [-60, 60], feet: [-65, 100], footZ: -92, block: [34, 30, 22], over: 60 },
 };
@@ -674,7 +678,7 @@ const ghostDepth = new THREE.MeshBasicMaterial({ colorWrite: false, transparent:
 const ghostMat = (c, opacity, o = {}) => new THREE.MeshStandardMaterial({
   color: c, roughness: 0.6, metalness: 0.15, transparent: true, opacity, depthWrite: false, ...o });
 const MACH_MAT = {
-  aussen: ghostMat(0x4a4a50, 0.5, { roughness: 0.7 }), innen: ghostMat(0x606067, 0.5), zsteg: ghostMat(0x56565c, 0.5, { roughness: 0.45 }),
+  frame: ghostMat(0x4a4a50, 0.5, { roughness: 0.7 }), cradle: ghostMat(0x606067, 0.5), rotary_table: ghostMat(0x56565c, 0.5, { roughness: 0.45 }),
   extruder: ghostMat(0xa1a1a6, 0.28, { metalness: 0.3, roughness: 0.55 }),
   bearing: ghostMat(0xa1a1a6, 0.6, { metalness: 0.6, roughness: 0.35 }),
   // Stangen und Lagerklötze dunkel und zurückhaltend; Stangen mit RGBA-Vertexfarben, Alpha läuft an den Enden aus
@@ -694,7 +698,7 @@ function addGhost(parent, geo, mat, x = 0, y = 0, z = 0) {
   };
   axisLine(new THREE.Vector3(0, -100, 0), new THREE.Vector3(0, 135, 0), 0x30d158, carY);       // B
   axisLine(new THREE.Vector3(0, 0, -80), new THREE.Vector3(0, 0, 45), 0x0a84ff, cradleB);      // C
-  // C-Lager: Scheibe oben dreht mit C (unter dem Flansch), Scheibe unten sitzt auf dem Ring von innen3 (folgt B)
+  // C-Lager: Scheibe oben dreht mit C (unter dem Flansch), Scheibe unten sitzt auf dem Ring von cradle (folgt B)
   const links = { tableC, cradleB };
   for (const [r0, r1, z0, z1, link] of MACH.bearing) {
     const s = new THREE.Shape().absarc(0, 0, r1, 0, TAU, false);
@@ -728,10 +732,10 @@ function addGhost(parent, geo, mat, x = 0, y = 0, z = 0) {
   }
 }
 
-// Netze aus open5x_machine_stl/machine_mesh.js (tools/machine_mesh.py): schon im Maschinen-KS platziert, verschweißt,
+// Netze aus machine_parts/machine_mesh.js (tools/machine_mesh.py): schon im Maschinen-KS platziert, verschweißt,
 // 16 bit quantisiert, gzip + base64. Klassisches <script>, weil die Seite per Doppelklick (file://) läuft und dort
 // nichts per fetch lesen darf.
-const MACHINE_JS = 'open5x_machine_stl/machine_mesh.js';
+const MACHINE_JS = 'machine_parts/machine_mesh.js';
 function loadScript(src) {
   return new Promise((res, rej) => {
     const s = document.createElement('script');
@@ -757,7 +761,7 @@ async function loadMachine() {
     geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
     geo.setIndex(new THREE.BufferAttribute(p.i32 ? new Uint32Array(ib) : new Uint16Array(ib), 1));
     geo = toCreasedNormals(geo, 40 * D2R);                           // Freiformflächen rund, Kanten scharf
-    addGhost(links[p.link], geo, MACH_MAT[p.name] || MACH_MAT.aussen).visible = S.view === 'machine';
+    addGhost(links[p.link], geo, MACH_MAT[p.name] || MACH_MAT.frame).visible = S.view === 'machine';
   }
 }
 
@@ -1050,14 +1054,13 @@ function warnings(gc) {
 }
 
 const MODE_TXT = {
-  robot: 'LP robot code · table pose as in the postprocessor',
-  machine: 'Open5x machine code (X Y Z U V)',
+  robot: 'Robot code (A/B/C) · table pose as in the postprocessor',
+  machine: 'Machine code (X Y Z U V)',
   table: 'Table angles B/C (postprocessor input)',
   none: '3-axis code',
 };
 
 function load(text, name) {
-  const t0 = performance.now();
   const gc = parseGcode(text);
   if (!gc.layers.length) { $('status').textContent = 'No layers found (expected ";layer N", ";LAYER_CHANGE" or ";LAYER:")'; return; }
   if (gc.mode === 'machine') machineToPart(gc);
@@ -1085,7 +1088,7 @@ function load(text, name) {
   $('layer').max = gc.layers.length - 1;
   S.layer = gc.layers.length - 1; S.move = gc.layers[S.layer].moves.length; S.frac = 0;
   show(); fitView();
-  $('status').textContent = `loaded in ${(performance.now() - t0).toFixed(0)} ms`;
+  $('status').textContent = '';                                      // alte Fehlermeldung weg, sonst still
 }
 
 // ================================================================== Abspielen (Maschinenzeit × Tempo)

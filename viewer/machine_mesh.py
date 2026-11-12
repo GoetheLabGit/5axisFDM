@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Open5x-Maschinenmodell für gcode_viewer.html: STLs aus open5x_machine_stl/ -> open5x_machine_stl/machine_mesh.js.
+"""Maschinenmodell für gcode_viewer.html: STLs aus machine_parts/ -> machine_parts/machine_mesh.js.
 
 Der Viewer wird per Doppelklick (file://) geöffnet, dort darf er keine Dateien nachladen; ein klassisches
 <script src> geht aber. Deshalb stehen die Netze hier fertig platziert, verschweißt, auf 16 bit quantisiert und
@@ -10,12 +10,12 @@ gzip-komprimiert als base64 in einer JS-Datei. Nach geänderten STLs einfach neu
 Maschinen-KS (wie der Viewer): Ursprung = Plattenmitte auf der Oberfläche = Schnitt von B- und C-Achse,
 X rechts, Y hinten, Z oben, B um Y, C um Z, Düse senkrecht.
 
-* aussen3 / innen3 / z-steg liegen im Baugruppen-KS des Tisches: Ursprung wie oben, B-Achse = STL-X, Flanschlager
+* frame / cradle / rotary_table liegen im Baugruppen-KS des Tisches: Ursprung wie oben, B-Achse = STL-X, Flanschlager
   (Schwenkantrieb) bei STL-X < 0. Rz(-90°) legt die B-Achse auf Maschinen-Y, Flansch hinten (+Y), Wellenlager vorn
   (passt zum Screenshot und zur Kinematik des Viewers).
-* Extruder.stl (Prusa-Kopf) ist Y-oben exportiert (Düse -Y, Front +Z, X-Schlitten -Z). Rx(+90°) stellt ihn auf,
+* extruder.stl (Prusa-Kopf) ist Y-oben exportiert (Düse -Y, Front +Z, X-Schlitten -Z). Rx(+90°) stellt ihn auf,
   danach liegt die Düsenspitze (tiefster Punkt) im Ursprung der Kopf-Gruppe.
-Das Lager zwischen z-steg und innen ist kein STL, der Viewer zeichnet es selbst (MACH.bearing).
+Das Lager zwischen rotary_table und cradle ist kein STL, der Viewer zeichnet es selbst (MACH.bearing).
 """
 import base64
 import gzip
@@ -27,7 +27,7 @@ from pathlib import Path
 import numpy as np
 
 HERE = Path(__file__).resolve().parent
-SRC = HERE / 'open5x_machine_stl'
+SRC = HERE / 'machine_parts'
 OUT = SRC / 'machine_mesh.js'
 
 R_TABLE = np.array([[0, 1, 0], [-1, 0, 0], [0, 0, 1]], float)    # Rz(-90°): (x, y, z) -> (y, -x, z)
@@ -35,10 +35,10 @@ R_HEAD = np.array([[1, 0, 0], [0, 0, -1], [0, 1, 0]], float)     # Rx(+90°): (x
 
 # Name, Datei, Glied der Kette im Viewer (carY = Y-Schlitten, cradleB = Schwenk B, tableC = Drehung C, head = Kopf)
 PARTS = [
-    ('aussen', 'aussen3.stl', 'carY', R_TABLE),
-    ('innen', 'innen3.stl', 'cradleB', R_TABLE),
-    ('zsteg', 'z-steg.stl', 'tableC', R_TABLE),
-    ('extruder', 'Extruder.stl', 'head', R_HEAD),
+    ('frame', 'frame.stl', 'carY', R_TABLE),                 # Rahmen, fest auf dem Y-Schlitten
+    ('cradle', 'cradle.stl', 'cradleB', R_TABLE),            # Schwenkwiege, dreht um B
+    ('rotary_table', 'rotary_table.stl', 'tableC', R_TABLE),  # Platte mit Steg, dreht um C
+    ('extruder', 'extruder.stl', 'head', R_HEAD),
 ]
 
 
