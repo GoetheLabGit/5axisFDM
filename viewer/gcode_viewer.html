@@ -1014,14 +1014,14 @@ function showCode(line) {
 
 function setLayer(j) {
   if (!S.gc) return;
-  S.layer = Math.max(0, Math.min(S.gc.layers.length - 1, j));
+  S.layer = Math.max(0, Math.min(S.gc.layers.length - 1, j)); S.wrapAt = 0;
   // Beim Abspielen an den Anfang der Schicht: am Ende stehend würde advance() sofort in die übernächste springen
   S.move = S.playing ? 0 : S.gc.layers[S.layer].moves.length; S.frac = 0;
   show();
 }
 function setMove(k) {
   if (!S.gc) return;
-  S.move = Math.max(0, Math.min(S.gc.layers[S.layer].moves.length, k)); S.frac = 0;
+  S.move = Math.max(0, Math.min(S.gc.layers[S.layer].moves.length, k)); S.frac = 0; S.wrapAt = 0;
   show();
 }
 
@@ -1115,17 +1115,23 @@ function playUi(on) {
 }
 function togglePlay(on = !S.playing) {
   if (!S.gc) return;
-  S.playing = on;
+  S.playing = on; S.wrapAt = 0;
   playUi(on);
   const last = S.gc.layers.length - 1;
   if (on && S.layer === last && S.move >= S.gc.layers[last].moves.length) { S.layer = 0; S.move = 0; S.frac = 0; }
 }
+// Demo-Schleife (Messe-Tablet): nach der letzten Schicht kurz das fertige Teil zeigen, dann wieder ab Schicht 1
+const LOOP_HOLD_MS = 2000;
 function advance(sec) {
   const layers = S.gc.layers;
+  if (S.wrapAt) {
+    if (performance.now() < S.wrapAt) return;
+    S.wrapAt = 0; S.layer = 0; S.move = 0; S.frac = 0;
+  }
   for (let guard = 0; sec > 0 && guard < 500000; guard++) {
     const m = layers[S.layer].moves[S.move];
     if (!m) {
-      if (S.layer >= layers.length - 1) { togglePlay(false); break; }
+      if (S.layer >= layers.length - 1) { S.wrapAt = performance.now() + LOOP_HOLD_MS; break; }
       S.layer++; S.move = 0; S.frac = 0; continue;
     }
     const rem = (1 - S.frac) * m.dt;
