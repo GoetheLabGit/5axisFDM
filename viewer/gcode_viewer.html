@@ -156,6 +156,15 @@
   .stage-ctl { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; pointer-events: auto; }
   .stage-ctl .seg { min-width: 196px; background: rgba(44, 44, 46, .72);
     -webkit-backdrop-filter: blur(20px) saturate(160%); backdrop-filter: blur(20px) saturate(160%); }
+  /* Vollbild (v.a. fürs Tablet: Android-Chrome hat kein F11) */
+  .stage-row { display: flex; align-items: stretch; gap: 8px; }
+  #fs { display: grid; place-items: center; min-width: 30px; min-height: 30px; padding: 0 7px; border: 0; border-radius: 9px;
+    background: rgba(44, 44, 46, .72); color: var(--text-2); cursor: pointer;
+    -webkit-backdrop-filter: blur(20px) saturate(160%); backdrop-filter: blur(20px) saturate(160%); }
+  #fs:hover { color: #fff; }
+  #fs svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  #fs[hidden], #fs .exit, :fullscreen #fs .enter { display: none; }
+  :fullscreen #fs .exit { display: block; }
   #status { color: var(--text-3); font-size: 11px; text-align: right; }
   /* Legende: dezent rechts oben unter dem Umschalter */
   #legend { display: flex; flex-direction: column; align-items: flex-end; gap: 3px; margin-top: 4px; }
@@ -308,7 +317,13 @@
         <div id="warn"></div>
       </div>
       <div class="stage-ctl">
-        <div class="seg"><button id="vMach" class="on" type="button">Machine</button><button id="vPart" type="button">Part</button></div>
+        <div class="stage-row">
+          <div class="seg"><button id="vMach" class="on" type="button">Machine</button><button id="vPart" type="button">Part</button></div>
+          <button id="fs" type="button" title="Vollbild (F)" aria-label="Vollbild">
+            <svg class="enter" viewBox="0 0 24 24"><path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"/></svg>
+            <svg class="exit" viewBox="0 0 24 24"><path d="M9 4v5H4M20 9h-5V4M15 20v-5h5M4 15h5v5"/></svg>
+          </button>
+        </div>
         <div id="legend"></div>
         <div id="status"></div>
       </div>
@@ -1162,7 +1177,16 @@ $('play').onclick = () => togglePlay();
 $('vMach').onclick = () => setView('machine');
 $('vPart').onclick = () => setView('part');
 
+// Vollbild: ganze Seite; auf Android-Chrome geht das nur per Tipp auf einen Button (nicht beim Laden)
+function toggleFullscreen() {
+  if (document.fullscreenElement) document.exitFullscreen();
+  else document.documentElement.requestFullscreen({ navigationUI: 'hide' }).catch(() => {});
+}
+if (document.fullscreenEnabled) $('fs').onclick = toggleFullscreen;
+else $('fs').hidden = true;                                           // z.B. iPhone-Safari: keine Fullscreen-API
+
 window.addEventListener('keydown', e => {
+  if ((e.key === 'f' || e.key === 'F') && document.fullscreenEnabled && document.activeElement.tagName !== 'INPUT') { toggleFullscreen(); return; }
   if (document.activeElement.tagName === 'SELECT') return;
   if ((e.key === 's' || e.key === 'S') && SUB.loaded) { SUB.show = !SUB.show; updateSubstrate(); return; }
   if (!S.gc) return;
